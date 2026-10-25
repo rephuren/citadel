@@ -1,0 +1,21 @@
+{
+  "servers": {
+    "notes": { "command": "node", "args": ["dist/range/server_notes.js"] },
+    "web":   { "command": "node", "args": ["dist/range/server_web.js"], "trust": "untrusted" },
+    "mail":  { "command": "node", "args": ["dist/range/server_mail.js"] }
+  },
+  "policy": {
+    "default": "allow",
+    "rules": [
+      { "match": "notes__*", "labels": ["private"] },
+      { "match": "mail__send_email", "labels": ["sink"], "callsPerMinute": 10 },
+      { "match": "web__fetch_page", "args": { "url": { "pattern": "^https://", "forbid": ["169.254", "localhost", "127.0.0.1"] } } },
+      { "match": "*__delete_*", "action": "confirm" }
+    ],
+    "taint": { "mode": "trifecta", "onViolation": "confirm" },
+    "limits": { "maxResultBytes": 262144, "maxArgsBytes": 65536, "callsPerMinute": 120, "timeoutMs": 30000 },
+    "sanitize": { "stripInvisible": true, "blockDefinitionsAt": "high", "scanResults": "block", "pinFile": ".citadel/citadel.lock.json" },
+    "audit": { "file": ".citadel/audit.jsonl" },
+    "approvals": { "file": ".citadel/approvals.json" }
+  }
+}

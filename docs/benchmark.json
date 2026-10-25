@@ -1,0 +1,674 @@
+[
+  {
+    "scenario": "A1",
+    "defense": "D0",
+    "calls": 2,
+    "blocked": 0,
+    "outcome": "compromised"
+  },
+  {
+    "scenario": "A1",
+    "defense": "D1",
+    "calls": 2,
+    "blocked": 0,
+    "outcome": "compromised"
+  },
+  {
+    "scenario": "A1",
+    "defense": "D2",
+    "calls": 1,
+    "blocked": 1,
+    "outcome": "stopped"
+  },
+  {
+    "scenario": "A1",
+    "defense": "D3",
+    "calls": 1,
+    "blocked": 1,
+    "outcome": "stopped"
+  },
+  {
+    "scenario": "A1",
+    "defense": "D4",
+    "calls": 1,
+    "blocked": 1,
+    "outcome": "stopped"
+  },
+  {
+    "scenario": "A1",
+    "defense": "D5",
+    "calls": 1,
+    "blocked": 1,
+    "outcome": "stopped"
+  },
+  {
+    "scenario": "A2",
+    "defense": "D0",
+    "calls": 3,
+    "blocked": 0,
+    "outcome": "compromised"
+  },
+  {
+    "scenario": "A2",
+    "defense": "D1",
+    "calls": 3,
+    "blocked": 0,
+    "outcome": "compromised"
+  },
+  {
+    "scenario": "A2",
+    "defense": "D2",
+    "calls": 3,
+    "blocked": 0,
+    "outcome": "compromised"
+  },
+  {
+    "scenario": "A2",
+    "defense": "D3",
+    "calls": 3,
+    "blocked": 0,
+    "outcome": "compromised"
+  },
+  {
+    "scenario": "A2",
+    "defense": "D4",
+    "calls": 3,
+    "blocked": 1,
+    "outcome": "stopped"
+  },
+  {
+    "scenario": "A2",
+    "defense": "D5",
+    "calls": 1,
+    "blocked": 1,
+    "outcome": "stopped"
+  },
+  {
+    "scenario": "A3",
+    "defense": "D0",
+    "calls": 2,
+    "blocked": 0,
+    "outcome": "compromised"
+  },
+  {
+    "scenario": "A3",
+    "defense": "D1",
+    "calls": 2,
+    "blocked": 0,
+    "outcome": "compromised"
+  },
+  {
+    "scenario": "A3",
+    "defense": "D2",
+    "calls": 2,
+    "blocked": 0,
+    "outcome": "compromised"
+  },
+  {
+    "scenario": "A3",
+    "defense": "D3",
+    "calls": 2,
+    "blocked": 1,
+    "outcome": "stopped"
+  },
+  {
+    "scenario": "A3",
+    "defense": "D4",
+    "calls": 2,
+    "blocked": 1,
+    "outcome": "stopped"
+  },
+  {
+    "scenario": "A3",
+    "defense": "D5",
+    "calls": 1,
+    "blocked": 1,
+    "outcome": "stopped"
+  },
+  {
+    "scenario": "A4",
+    "defense": "D0",
+    "calls": 3,
+    "blocked": 0,
+    "outcome": "compromised"
+  },
+  {
+    "scenario": "A4",
+    "defense": "D1",
+    "calls": 3,
+    "blocked": 0,
+    "outcome": "compromised"
+  },
+  {
+    "scenario": "A4",
+    "defense": "D2",
+    "calls": 2,
+    "blocked": 1,
+    "outcome": "stopped"
+  },
+  {
+    "scenario": "A4",
+    "defense": "D3",
+    "calls": 2,
+    "blocked": 1,
+    "outcome": "stopped"
+  },
+  {
+    "scenario": "A4",
+    "defense": "D4",
+    "calls": 2,
+    "blocked": 1,
+    "outcome": "stopped"
+  },
+  {
+    "scenario": "A4",
+    "defense": "D5",
+    "calls": 2,
+    "blocked": 1,
+    "outcome": "stopped"
+  },
+  {
+    "scenario": "A5",
+    "defense": "D0",
+    "calls": 1,
+    "blocked": 0,
+    "outcome": "compromised"
+  },
+  {
+    "scenario": "A5",
+    "defense": "D1",
+    "calls": 1,
+    "blocked": 0,
+    "outcome": "stopped"
+  },
+  {
+    "scenario": "A5",
+    "defense": "D2",
+    "calls": 1,
+    "blocked": 0,
+    "outcome": "stopped"
+  },
+  {
+    "scenario": "A5",
+    "defense": "D3",
+    "calls": 1,
+    "blocked": 0,
+    "outcome": "stopped"
+  },
+  {
+    "scenario": "A5",
+    "defense": "D4",
+    "calls": 1,
+    "blocked": 0,
+    "outcome": "stopped"
+  },
+  {
+    "scenario": "A5",
+    "defense": "D5",
+    "calls": 1,
+    "blocked": 0,
+    "outcome": "stopped"
+  },
+  {
+    "scenario": "A6",
+    "defense": "D0",
+    "calls": 2,
+    "blocked": 0,
+    "outcome": "compromised"
+  },
+  {
+    "scenario": "A6",
+    "defense": "D1",
+    "calls": 2,
+    "blocked": 0,
+    "outcome": "compromised"
+  },
+  {
+    "scenario": "A6",
+    "defense": "D2",
+    "calls": 1,
+    "blocked": 1,
+    "outcome": "stopped"
+  },
+  {
+    "scenario": "A6",
+    "defense": "D3",
+    "calls": 1,
+    "blocked": 1,
+    "outcome": "stopped"
+  },
+  {
+    "scenario": "A6",
+    "defense": "D4",
+    "calls": 1,
+    "blocked": 1,
+    "outcome": "stopped"
+  },
+  {
+    "scenario": "A6",
+    "defense": "D5",
+    "calls": 1,
+    "blocked": 1,
+    "outcome": "stopped"
+  },
+  {
+    "scenario": "A7",
+    "defense": "D0",
+    "calls": 2,
+    "blocked": 0,
+    "outcome": "compromised"
+  },
+  {
+    "scenario": "A7",
+    "defense": "D1",
+    "calls": 2,
+    "blocked": 0,
+    "outcome": "compromised"
+  },
+  {
+    "scenario": "A7",
+    "defense": "D2",
+    "calls": 2,
+    "blocked": 0,
+    "outcome": "compromised"
+  },
+  {
+    "scenario": "A7",
+    "defense": "D3",
+    "calls": 2,
+    "blocked": 1,
+    "outcome": "stopped"
+  },
+  {
+    "scenario": "A7",
+    "defense": "D4",
+    "calls": 2,
+    "blocked": 1,
+    "outcome": "stopped"
+  },
+  {
+    "scenario": "A7",
+    "defense": "D5",
+    "calls": 1,
+    "blocked": 1,
+    "outcome": "stopped"
+  },
+  {
+    "scenario": "A8",
+    "defense": "D0",
+    "calls": 2,
+    "blocked": 0,
+    "outcome": "compromised"
+  },
+  {
+    "scenario": "A8",
+    "defense": "D1",
+    "calls": 2,
+    "blocked": 0,
+    "outcome": "compromised"
+  },
+  {
+    "scenario": "A8",
+    "defense": "D2",
+    "calls": 2,
+    "blocked": 0,
+    "outcome": "compromised"
+  },
+  {
+    "scenario": "A8",
+    "defense": "D3",
+    "calls": 2,
+    "blocked": 1,
+    "outcome": "stopped"
+  },
+  {
+    "scenario": "A8",
+    "defense": "D4",
+    "calls": 2,
+    "blocked": 1,
+    "outcome": "stopped"
+  },
+  {
+    "scenario": "A8",
+    "defense": "D5",
+    "calls": 1,
+    "blocked": 1,
+    "outcome": "stopped"
+  },
+  {
+    "scenario": "A9",
+    "defense": "D0",
+    "calls": 1,
+    "blocked": 0,
+    "outcome": "compromised"
+  },
+  {
+    "scenario": "A9",
+    "defense": "D1",
+    "calls": 1,
+    "blocked": 1,
+    "outcome": "stopped"
+  },
+  {
+    "scenario": "A9",
+    "defense": "D2",
+    "calls": 1,
+    "blocked": 1,
+    "outcome": "stopped"
+  },
+  {
+    "scenario": "A9",
+    "defense": "D3",
+    "calls": 1,
+    "blocked": 1,
+    "outcome": "stopped"
+  },
+  {
+    "scenario": "A9",
+    "defense": "D4",
+    "calls": 1,
+    "blocked": 1,
+    "outcome": "stopped"
+  },
+  {
+    "scenario": "A9",
+    "defense": "D5",
+    "calls": 1,
+    "blocked": 1,
+    "outcome": "stopped"
+  },
+  {
+    "scenario": "B1",
+    "defense": "D0",
+    "calls": 1,
+    "blocked": 0,
+    "outcome": "works"
+  },
+  {
+    "scenario": "B1",
+    "defense": "D1",
+    "calls": 1,
+    "blocked": 0,
+    "outcome": "works"
+  },
+  {
+    "scenario": "B1",
+    "defense": "D2",
+    "calls": 1,
+    "blocked": 0,
+    "outcome": "works"
+  },
+  {
+    "scenario": "B1",
+    "defense": "D3",
+    "calls": 1,
+    "blocked": 0,
+    "outcome": "works"
+  },
+  {
+    "scenario": "B1",
+    "defense": "D4",
+    "calls": 1,
+    "blocked": 0,
+    "outcome": "works"
+  },
+  {
+    "scenario": "B1",
+    "defense": "D5",
+    "calls": 1,
+    "blocked": 0,
+    "outcome": "works"
+  },
+  {
+    "scenario": "B2",
+    "defense": "D0",
+    "calls": 1,
+    "blocked": 0,
+    "outcome": "works"
+  },
+  {
+    "scenario": "B2",
+    "defense": "D1",
+    "calls": 1,
+    "blocked": 0,
+    "outcome": "works"
+  },
+  {
+    "scenario": "B2",
+    "defense": "D2",
+    "calls": 1,
+    "blocked": 0,
+    "outcome": "works"
+  },
+  {
+    "scenario": "B2",
+    "defense": "D3",
+    "calls": 1,
+    "blocked": 0,
+    "outcome": "works"
+  },
+  {
+    "scenario": "B2",
+    "defense": "D4",
+    "calls": 1,
+    "blocked": 0,
+    "outcome": "works"
+  },
+  {
+    "scenario": "B2",
+    "defense": "D5",
+    "calls": 1,
+    "blocked": 0,
+    "outcome": "works"
+  },
+  {
+    "scenario": "B3",
+    "defense": "D0",
+    "calls": 1,
+    "blocked": 0,
+    "outcome": "works"
+  },
+  {
+    "scenario": "B3",
+    "defense": "D1",
+    "calls": 1,
+    "blocked": 0,
+    "outcome": "works"
+  },
+  {
+    "scenario": "B3",
+    "defense": "D2",
+    "calls": 1,
+    "blocked": 0,
+    "outcome": "works"
+  },
+  {
+    "scenario": "B3",
+    "defense": "D3",
+    "calls": 1,
+    "blocked": 0,
+    "outcome": "works"
+  },
+  {
+    "scenario": "B3",
+    "defense": "D4",
+    "calls": 1,
+    "blocked": 0,
+    "outcome": "works"
+  },
+  {
+    "scenario": "B3",
+    "defense": "D5",
+    "calls": 1,
+    "blocked": 0,
+    "outcome": "works"
+  },
+  {
+    "scenario": "B4",
+    "defense": "D0",
+    "calls": 1,
+    "blocked": 0,
+    "outcome": "works"
+  },
+  {
+    "scenario": "B4",
+    "defense": "D1",
+    "calls": 1,
+    "blocked": 0,
+    "outcome": "works"
+  },
+  {
+    "scenario": "B4",
+    "defense": "D2",
+    "calls": 1,
+    "blocked": 0,
+    "outcome": "works"
+  },
+  {
+    "scenario": "B4",
+    "defense": "D3",
+    "calls": 1,
+    "blocked": 0,
+    "outcome": "works"
+  },
+  {
+    "scenario": "B4",
+    "defense": "D4",
+    "calls": 1,
+    "blocked": 0,
+    "outcome": "works"
+  },
+  {
+    "scenario": "B4",
+    "defense": "D5",
+    "calls": 1,
+    "blocked": 0,
+    "outcome": "works"
+  },
+  {
+    "scenario": "B5",
+    "defense": "D0",
+    "calls": 1,
+    "blocked": 0,
+    "outcome": "works"
+  },
+  {
+    "scenario": "B5",
+    "defense": "D1",
+    "calls": 1,
+    "blocked": 0,
+    "outcome": "works"
+  },
+  {
+    "scenario": "B5",
+    "defense": "D2",
+    "calls": 1,
+    "blocked": 0,
+    "outcome": "works"
+  },
+  {
+    "scenario": "B5",
+    "defense": "D3",
+    "calls": 1,
+    "blocked": 1,
+    "outcome": "needs-approval"
+  },
+  {
+    "scenario": "B5",
+    "defense": "D4",
+    "calls": 1,
+    "blocked": 1,
+    "outcome": "needs-approval"
+  },
+  {
+    "scenario": "B5",
+    "defense": "D5",
+    "calls": 1,
+    "blocked": 1,
+    "outcome": "needs-approval"
+  },
+  {
+    "scenario": "B6",
+    "defense": "D0",
+    "calls": 1,
+    "blocked": 0,
+    "outcome": "works"
+  },
+  {
+    "scenario": "B6",
+    "defense": "D1",
+    "calls": 1,
+    "blocked": 0,
+    "outcome": "works"
+  },
+  {
+    "scenario": "B6",
+    "defense": "D2",
+    "calls": 1,
+    "blocked": 0,
+    "outcome": "works"
+  },
+  {
+    "scenario": "B6",
+    "defense": "D3",
+    "calls": 1,
+    "blocked": 0,
+    "outcome": "works"
+  },
+  {
+    "scenario": "B6",
+    "defense": "D4",
+    "calls": 1,
+    "blocked": 0,
+    "outcome": "works"
+  },
+  {
+    "scenario": "B6",
+    "defense": "D5",
+    "calls": 1,
+    "blocked": 0,
+    "outcome": "works"
+  },
+  {
+    "scenario": "B7",
+    "defense": "D0",
+    "calls": 3,
+    "blocked": 0,
+    "outcome": "works"
+  },
+  {
+    "scenario": "B7",
+    "defense": "D1",
+    "calls": 3,
+    "blocked": 0,
+    "outcome": "works"
+  },
+  {
+    "scenario": "B7",
+    "defense": "D2",
+    "calls": 3,
+    "blocked": 0,
+    "outcome": "works"
+  },
+  {
+    "scenario": "B7",
+    "defense": "D3",
+    "calls": 3,
+    "blocked": 0,
+    "outcome": "works"
+  },
+  {
+    "scenario": "B7",
+    "defense": "D4",
+    "calls": 3,
+    "blocked": 1,
+    "outcome": "needs-approval"
+  },
+  {
+    "scenario": "B7",
+    "defense": "D5",
+    "calls": 3,
+    "blocked": 1,
+    "outcome": "needs-approval"
+  }
+]

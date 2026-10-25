@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>citadel</title>
+<style>
+  :root { --bg:#050505; --panel:#0b0b0b; --line:#1a1a1a; --text:#e8e8e8; --dim:#8a8a8a; --faint:#555; --red:#b3000f; --redhi:#e0001a; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font:13px/1.5 'SF Mono',Menlo,Consolas,monospace; }
+  main { max-width:1200px; margin:0 auto; padding:32px 20px 60px; }
+  header { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:6px; }
+  h1 { margin:0; font-size:34px; letter-spacing:.35em; color:var(--dim); }
+  .stamp { color:var(--faint); font-size:12px; }
+  .lead { color:var(--dim); margin:0 0 24px; max-width:760px; }
+  .cards { display:grid; grid-template-columns:repeat(5,1fr); gap:12px; margin-bottom:20px; }
+  .card { background:var(--panel); border:1px solid var(--line); padding:12px 14px; }
+  .card span { display:block; color:var(--faint); font-size:11px; letter-spacing:.15em; text-transform:uppercase; }
+  .card b { font-size:30px; }
+  .card.hot b { color:var(--redhi); }
+  .grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px; }
+  section { background:var(--panel); border:1px solid var(--line); padding:14px 16px; min-width:0; }
+  h2 { margin:0 0 10px; font-size:11px; letter-spacing:.2em; color:var(--dim); text-transform:uppercase; font-weight:600; }
+  h2::before { content:"▓ "; color:var(--red); }
+  .row { display:flex; justify-content:space-between; gap:12px; padding:3px 0; border-bottom:1px solid #101010; }
+  .row span:first-child { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .row .n { color:var(--dim); flex:none; }
+  .empty { color:var(--faint); }
+  table { width:100%; border-collapse:collapse; }
+  td { padding:3px 8px 3px 0; border-bottom:1px solid #101010; vertical-align:top; word-break:break-word; }
+  td.t { color:var(--faint); }
+  td.t:first-child, td.d, td:nth-child(3) { white-space:nowrap; padding-right:14px; }
+  .allow { color:var(--dim); } .deny, .result-blocked, .result-too-large, .confirm-denied { color:var(--redhi); } .confirm-pending { color:#d9a400; } .error { color:#d9a400; }
+  @media (max-width:800px) { .cards { grid-template-columns:repeat(2,1fr); } .grid { grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+<main>
+  <header><h1>CITADEL</h1><span class="stamp" id="stamp">…</span></header>
+  <p class="lead">Журнал шлюза: что вызывали, что запретили и почему. Значения аргументов в журнал не пишутся, только их форма и отпечаток.</p>
+  <div class="cards">
+    <div class="card"><span>вызовов</span><b id="total">0</b></div>
+    <div class="card"><span>разрешено</span><b id="allowed">0</b></div>
+    <div class="card hot"><span>запрещено</span><b id="denied">0</b></div>
+    <div class="card"><span>ждёт человека</span><b id="pending">0</b></div>
+    <div class="card hot"><span>скрыто определений</span><b id="quarantined">0</b></div>
+  </div>
+  <div class="grid">
+    <section><h2>причины отказов</h2><div id="reasons"></div></section>
+    <section><h2>скрытые определения</h2><div id="quarantine"></div></section>
+    <section><h2>самые частые инструменты</h2><div id="tools"></div></section>
+    <section><h2>заметки о перетекании данных</h2><div id="flows"></div></section>
+  </div>
+  <section><h2>последние события</h2><table id="events"></table></section>
+</main>
+<script nonce="__NONCE__">
+  const $ = (id) => document.getElementById(id);
+  const get = (u) => fetch(u, { cache: "no-store" }).then((r) => r.json());
+  function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text !== undefined) e.textContent = text; return e; }
+  function rows(box, pairs, empty) {
+    box.replaceChildren();
+    if (!pairs.length) { box.append(el("div", "empty", empty)); return; }
+    for (const [name, n] of pairs) { const r = el("div", "row"); r.append(el("span", "", name), el("span", "n", String(n))); box.append(r); }
+  }
+  async function refresh() {
+    const [s, events] = await Promise.all([get("/api/summary"), get("/api/events?limit=60")]);
+    $("total").textContent = s.total; $("allowed").textContent = s.allowed; $("denied").textContent = s.denied;
+    $("pending").textContent = s.pending; $("quarantined").textContent = s.quarantined.length;
+    $("stamp").textContent = s.last ? "последнее событие " + s.last.replace("T", " ").slice(0, 19) : "событий ещё нет";
+    rows($("reasons"), s.topReasons, "отказов не было");
+    rows($("tools"), s.topTools, "вызовов не было");
+    rows($("quarantine"), s.quarantined.map((q) => [q.tool + ": " + q.why, ""]), "все определения доступны");
+    rows($("flows"), s.leakFlows ? [["записей о возможном перетекании данных", s.leakFlows]] : [], "не обнаружено");
+    const t = $("events"); t.replaceChildren();
+    for (const e of events) {
+      const tr = el("tr");
+      const what = e.type === "call" ? (e.tool || "?") : (e.type + (e.tool ? " " + e.tool : e.server ? " " + e.server : ""));
+      const why = Array.isArray(e.reasons) && e.reasons.length ? e.reasons.join("; ") : (e.quarantine || "");
+      tr.append(el("td", "t", String(e.ts || "").slice(11, 19)), el("td", "d " + String(e.decision || ""), String(e.decision || e.type)), el("td", "", what), el("td", "t", String(why).slice(0, 180)));
+      t.append(tr);
+    }
+  }
+  refresh(); setInterval(() => refresh().catch(() => {}), 4000);
+</script>
+</body>
+</html>

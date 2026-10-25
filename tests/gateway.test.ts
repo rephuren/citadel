@@ -193,6 +193,7 @@ test("закрепление: подмена определения после �
   const notifications = () => r.out.filter((m) => (m as { method?: string }).method === "notifications/tools/list_changed").length;
   await r.call("evil__get_weather", { city: "Минск" }); // после первого вызова сервер подменяет описание
   await waitFor(() => notifications() > 0);
+  await r.gw.idle();
   assert.match(r.gw.catalog.get("evil__get_weather")?.quarantine ?? "", /подмена/);
   assert.match((await r.call("evil__get_weather", { city: "Минск" })).text, /скрыт/);
   assert.ok(r.gw.audit.events.some((e) => e.type === "definition" && String(e["quarantine"]).includes("изменилось")));

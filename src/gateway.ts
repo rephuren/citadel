@@ -53,6 +53,7 @@ export class Gateway {
   private readonly log: (line: string) => void;
   private lock: Lock | undefined;
   private callCount = 0;
+  private readonly refreshing = new Set<Promise<void>>();
 
   constructor(private readonly opts: GatewayOptions) {
     const { policy } = opts.config;
@@ -77,7 +78,7 @@ export class Gateway {
           : new Upstream(name, spec, {
               timeoutMs: policy.limits.timeoutMs,
               onStderr: (l) => this.log(l),
-              onToolsChanged: () => void this.refresh(name),
+              onToolsChanged: () => void this.track(this.refresh(name)),
               onRefusedRequest: (method) => this.audit.log({ type: "refused-request", server: name, method }),
             });
         try {
@@ -97,6 +98,17 @@ export class Gateway {
 
   private visible(): CatalogEntry[] {
     return [...this.catalog.values()].filter((e) => !e.quarantine);
+  }
+
+  private track(p: Promise<void>): Promise<void> {
+    this.refreshing.add(p);
+    void p.finally(() => this.refreshing.delete(p));
+    return p;
+  }
+
+  /** Ждёт завершения обновлений каталога, запущенных уведомлениями серверов. */
+  async idle(): Promise<void> {
+    while (this.refreshing.size) await Promise.allSettled([...this.refreshing]);
   }
 
   /** Заново читает список инструментов сервера и пересобирает его часть каталога. */

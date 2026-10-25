@@ -6,12 +6,13 @@
   "author": "misxnthropy",
   "type": "module",
   "bin": { "citadel": "dist/src/cli.js" },
-  "files": ["dist/src", "README.md", "LICENSE"],
+  "files": ["dist/src", "src/dashboard.html", "README.md", "LICENSE"],
   "engines": { "node": ">=20" },
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "test": "npm run build && node scripts/run-tests.mjs",
-    "bench": "npm run build && node dist/bench/run.js"
+    "bench": "npm run build && node dist/bench/run.js docs/benchmark.md",
+    "demo-audit": "npm run build && node dist/bench/demo.js"
   },
   "devDependencies": {
     "@types/node": "^22.20.5",
