@@ -41,7 +41,7 @@ node dist/src/cli.js approvals --config examples/citadel.json
 node dist/src/cli.js approve <номер> --config examples/citadel.json
 ```
 
-Справочник по всем настройкам: [docs/configuration.md](docs/configuration.md).
+Справочник по всем настройкам: [docs/configuration.md](docs/configuration.md). Что шлюз закрывает и чего не умеет: [docs/threat-model.md](docs/threat-model.md).
 
 ## Что делает шлюз
 
