@@ -8,7 +8,8 @@ import { ERR, type Message, type Request, errorResponse, isNotification, isReque
 import { RateLimiter, evaluate, labelsFor, matchingRules } from "./policy.js";
 import { blocking, definitionFindings, mapResultTexts, resultTexts, sanitizeDefinition, scanResultText, stripInvisible } from "./sanitize.js";
 import { Taint } from "./taint.js";
-import { PROTOCOL_VERSION, Upstream, type UpstreamTool } from "./upstream.js";
+import { HttpUpstream } from "./http-upstream.js";
+import { type BaseUpstream, PROTOCOL_VERSION, Upstream, type UpstreamTool } from "./upstream.js";
 import { type Lock, parseLock, verify } from "./vendor/basilisk/pin.js";
 import type { Finding, Inventory } from "./vendor/basilisk/types.js";
 
@@ -30,7 +31,7 @@ export interface GatewayOptions {
   log?: (line: string) => void;
   clock?: () => number;
   /** подмена запуска серверов в тестах */
-  makeUpstream?: (name: string) => Upstream;
+  makeUpstream?: (name: string) => BaseUpstream;
 }
 
 type CallResult = Record<string, unknown>;
@@ -47,7 +48,7 @@ export class Gateway {
   readonly audit: Audit;
   readonly taint: Taint;
   readonly catalog = new Map<string, CatalogEntry>();
-  private readonly upstreams = new Map<string, Upstream>();
+  private readonly upstreams = new Map<string, BaseUpstream>();
   private readonly approvals: Approvals;
   private readonly limiter: RateLimiter;
   private readonly log: (line: string) => void;
@@ -75,7 +76,7 @@ export class Gateway {
       Object.entries(servers).map(async ([name, spec]) => {
         const up = this.opts.makeUpstream
           ? this.opts.makeUpstream(name)
-          : new Upstream(name, spec, {
+          : new (spec.url ? HttpUpstream : Upstream)(name, spec, {
               timeoutMs: policy.limits.timeoutMs,
               onStderr: (l) => this.log(l),
               onToolsChanged: () => void this.track(this.refresh(name)),

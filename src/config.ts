@@ -4,8 +4,13 @@ import { readFileSync } from "node:fs";
 export type Action = "allow" | "deny" | "confirm";
 
 export interface ServerSpec {
-  command: string;
+  /** запуск по stdio; для сервера по HTTP не задаётся */
+  command?: string;
   args: string[];
+  /** адрес MCP-сервера по streamable HTTP: https, либо http только для localhost */
+  url?: string;
+  /** дополнительные заголовки запросов (например Authorization); в журнал не попадают */
+  headers?: Record<string, string>;
   env: Record<string, string>;
   /** передавать ли серверу всё окружение процесса; по умолчанию нет */
   inheritEnv: boolean;
@@ -61,6 +66,24 @@ function isRecord(v: unknown): v is Record<string, unknown> {
   return typeof v === "object" && v !== null && !Array.isArray(v);
 }
 
+const LOOPBACK = new Set(["localhost", "127.0.0.1", "[::1]"]);
+
+/** Адрес сервера по HTTP: только https (http разрешён для localhost), без логина и пароля в адресе и без фрагмента. */
+export function checkServerUrl(raw: unknown, where: string): string {
+  if (typeof raw !== "string" || !raw) return fail(`${where}: ожидается строка с адресом`);
+  let u: URL;
+  try {
+    u = new URL(raw);
+  } catch {
+    return fail(`${where}: некорректный адрес`);
+  }
+  if (u.username || u.password) return fail(`${where}: учётные данные в адресе не допускаются, используйте headers`);
+  if (u.hash) return fail(`${where}: фрагмент (#) в адресе не допускается`);
+  if (u.protocol === "https:") return raw;
+  if (u.protocol === "http:" && LOOPBACK.has(u.hostname)) return raw;
+  return fail(`${where}: нужен https (http только для localhost)`);
+}
+
 const SERVER_NAME = /^[A-Za-z0-9][A-Za-z0-9-]{0,31}$/;
 
 function fail(message: string): never {
@@ -92,7 +115,10 @@ export function parseConfig(raw: unknown): Config {
   const servers: Record<string, ServerSpec> = {};
   for (const [name, s] of Object.entries(serversRaw)) {
     if (!SERVER_NAME.test(name)) return fail(`servers.${name}: имя только из латиницы, цифр и дефиса, до 32 символов`);
-    if (!isRecord(s) || typeof s["command"] !== "string" || !s["command"]) return fail(`servers.${name}.command: обязательная строка`);
+    if (!isRecord(s)) return fail(`servers.${name}: ожидается объект`);
+    const hasUrl = s["url"] !== undefined;
+    if (hasUrl && s["command"] !== undefined) return fail(`servers.${name}: укажите либо command, либо url, но не оба`);
+    if (!hasUrl && (typeof s["command"] !== "string" || !s["command"])) return fail(`servers.${name}.command: обязательная строка (или url для сервера по HTTP)`);
     const env: Record<string, string> = {};
     if (s["env"] !== undefined) {
       if (!isRecord(s["env"])) return fail(`servers.${name}.env: ожидается объект`);
@@ -102,13 +128,25 @@ export function parseConfig(raw: unknown): Config {
       }
     }
     const spec: ServerSpec = {
-      command: s["command"],
       args: strArray(s["args"], `servers.${name}.args`),
       env,
       inheritEnv: s["inheritEnv"] === true,
       trust: oneOf(s["trust"], ["trusted", "untrusted"] as const, `servers.${name}.trust`, "trusted"),
     };
+    if (typeof s["command"] === "string") spec.command = s["command"];
     if (typeof s["cwd"] === "string") spec.cwd = s["cwd"];
+    if (hasUrl) {
+      spec.url = checkServerUrl(s["url"], `servers.${name}.url`);
+      if (s["headers"] !== undefined) {
+        if (!isRecord(s["headers"])) return fail(`servers.${name}.headers: ожидается объект`);
+        const headers: Record<string, string> = {};
+        for (const [k, v] of Object.entries(s["headers"])) {
+          if (typeof v !== "string" || !/^[A-Za-z0-9-]+$/.test(k) || /[\r\n]/.test(v)) return fail(`servers.${name}.headers.${k}: недопустимое имя или значение`);
+          headers[k] = v;
+        }
+        spec.headers = headers;
+      }
+    }
     servers[name] = spec;
   }
 
