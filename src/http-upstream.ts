@@ -4,6 +4,7 @@ import type { ServerSpec } from "./config.js";
 import { BaseUpstream, PROTOCOL_VERSION, UpstreamError, type UpstreamOptions } from "./upstream.js";
 
 const CLOSE_TIMEOUT_MS = 1500;
+const MAX_STREAM_RETRIES = 3;
 
 /** Разбор потока SSE: события разделены пустой строкой, поля data склеиваются через перевод строки. */
 export class SseParser {
@@ -12,6 +13,7 @@ export class SseParser {
 
   feed(chunk: string): string[] {
     this.buf += chunk;
+    if (this.buf.length > MAX_LINE_BYTES) throw new UpstreamError("событие SSE длиннее лимита");
     const events: string[] = [];
     let nl: number;
     while ((nl = this.buf.search(/\r\n|\n|\r/)) >= 0) {
@@ -36,6 +38,7 @@ export class HttpUpstream extends BaseUpstream {
   private ready = false;
   private closed = false;
   private readonly inflight = new Set<AbortController>();
+  private streamAc: AbortController | undefined;
   private readonly url: string;
 
   constructor(name: string, private readonly spec: ServerSpec, private readonly opts: UpstreamOptions) {
@@ -72,6 +75,55 @@ export class HttpUpstream extends BaseUpstream {
     if (res.error) throw new UpstreamError(`${this.name}: сервер отклонил initialize: ${res.error.message}`);
     await this.notify({ jsonrpc: "2.0", method: "notifications/initialized" });
     this.ready = true;
+    void this.listen();
+  }
+
+  /**
+   * Отдельный поток GET: сервер может присылать уведомления в любой момент, а не только в ответе на запрос.
+   * Сервер без такого потока отвечает 405: это нормально, и мы просто остаёмся без него.
+   * При обрыве переподключаемся не больше MAX_STREAM_RETRIES раз подряд.
+   */
+  private async listen(): Promise<void> {
+    let failures = 0;
+    while (!this.closed && failures <= MAX_STREAM_RETRIES) {
+      const ac = new AbortController();
+      this.streamAc = ac;
+      let gotData = false;
+      try {
+        const { Accept: _a, "Content-Type": _c, ...rest } = this.headers();
+        const res = await fetch(this.url, { method: "GET", headers: { ...rest, Accept: "text/event-stream" }, signal: ac.signal, redirect: "error" });
+        const type = (res.headers.get("content-type") ?? "").toLowerCase();
+        if (res.status === 405 || res.status === 404 || res.status === 501 || !res.ok || !type.includes("text/event-stream")) {
+          await res.body?.cancel();
+          if (res.status === 405 || res.status === 501 || res.ok) return; // потока уведомлений у сервера нет
+          throw new UpstreamError(`${this.name}: поток уведомлений: HTTP ${res.status}`);
+        }
+        const parser = new SseParser();
+        const reader = res.body?.getReader();
+        const decoder = new TextDecoder();
+        while (reader) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          for (const ev of parser.feed(decoder.decode(value, { stream: true }))) {
+            gotData = true;
+            const msg = parseMessage(ev);
+            if (!msg) continue;
+            if (isRequest(msg)) void this.refuse(msg);
+            else if (isNotification(msg) && msg.method === "notifications/tools/list_changed") this.opts.onToolsChanged?.();
+          }
+        }
+      } catch (e) {
+        if (this.closed) return;
+        this.opts.onStderr?.(`[${this.name}] поток уведомлений прервался: ${e instanceof Error ? e.message : String(e)}`);
+      }
+      if (this.closed) return;
+      failures = gotData ? 1 : failures + 1;
+      if (failures > MAX_STREAM_RETRIES) {
+        this.opts.onStderr?.(`[${this.name}] поток уведомлений отключён после ${MAX_STREAM_RETRIES} неудачных переподключений`);
+        return;
+      }
+      await new Promise((r) => setTimeout(r, (this.opts.streamRetryMs ?? 1000) * failures));
+    }
   }
 
   private async notify(msg: Message): Promise<void> {
@@ -197,6 +249,7 @@ export class HttpUpstream extends BaseUpstream {
     const wasReady = this.ready;
     this.closed = true;
     this.ready = false;
+    this.streamAc?.abort();
     if (wasReady && this.sessionId) {
       const ac = new AbortController();
       const timer = setTimeout(() => ac.abort(), CLOSE_TIMEOUT_MS);

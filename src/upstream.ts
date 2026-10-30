@@ -26,6 +26,8 @@ export interface UpstreamOptions {
   onToolsChanged?: () => void;
   /** запросы сервера к клиенту (sampling, roots, elicitation) отклоняются; сюда попадает их название для аудита */
   onRefusedRequest?: (method: string) => void;
+  /** HTTP: пауза перед переподключением потока уведомлений, мс (по умолчанию 1000, умножается на номер попытки) */
+  streamRetryMs?: number;
 }
 
 const SAFE_ENV = ["PATH", "HOME", "USER", "LANG", "LC_ALL", "TMPDIR", "SystemRoot", "USERPROFILE"];
