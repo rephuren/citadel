@@ -18,6 +18,10 @@ interface Fake {
   deleted: string[];
   mode: Mode;
   tools: unknown[];
+  getMode: "405" | "sse" | "drop" | "500";
+  gets: number;
+  getHeaders: IncomingMessage["headers"][];
+  streams: ServerResponse[];
   close: () => Promise<void>;
 }
 
@@ -30,11 +34,26 @@ async function fake(mode: Mode = "json", tools: unknown[] = TOOLS): Promise<Fake
   f.deleted = [];
   f.mode = mode;
   f.tools = tools;
+  f.getMode = "405";
+  f.gets = 0;
+  f.getHeaders = [];
+  f.streams = [];
   f.server = createServer((req: IncomingMessage, res: ServerResponse) => {
     let raw = "";
     req.on("data", (c) => (raw += c));
     req.on("end", () => {
       const session = req.headers["mcp-session-id"] as string | undefined;
+      if (req.method === "GET") {
+        f.gets++;
+        f.getHeaders.push(req.headers);
+        if (f.getMode === "405") return void res.writeHead(405).end();
+        if (f.getMode === "500") return void res.writeHead(500).end();
+        res.writeHead(200, { "Content-Type": "text/event-stream" });
+        res.write(": open\n\n");
+        if (f.getMode === "drop" && f.gets === 1) return void setTimeout(() => res.end(), 30);
+        f.streams.push(res);
+        return;
+      }
       if (req.method === "DELETE") {
         f.deleted.push(session ?? "");
         res.writeHead(204).end();
@@ -262,4 +281,127 @@ test("шлюз: вызов через HTTP заражает сессию (taint)
   assert.notDeepEqual(gw.taint.state, { untrusted: false, private: false });
   await gw.stop();
   assert.deepEqual(f.deleted, ["sess-1"]);
+});
+
+async function until(cond: () => boolean, ms = 3000): Promise<void> {
+  const end = Date.now() + ms;
+  while (!cond()) {
+    if (Date.now() > end) throw new Error("условие не выполнилось вовремя");
+    await new Promise((r) => setTimeout(r, 10));
+  }
+}
+const push = (f: Fake, msg: unknown) => f.streams.forEach((s) => s.write(`data: ${JSON.stringify(msg)}\n\n`));
+const changed = { jsonrpc: "2.0", method: "notifications/tools/list_changed" };
+
+test("поток GET: уведомление об изменении инструментов доходит без запроса", async () => {
+  const f = await fake("json");
+  f.getMode = "sse";
+  let n = 0;
+  const u = up(f, 2000, {}, { onToolsChanged: () => n++ });
+  await u.start();
+  await until(() => f.streams.length === 1);
+  push(f, changed);
+  await until(() => n === 1);
+  push(f, changed);
+  await until(() => n === 2);
+  await u.close();
+});
+
+test("поток GET: заголовки сессии и пользовательские уходят, тела и Content-Type нет", async () => {
+  const f = await fake("json");
+  f.getMode = "sse";
+  const u = up(f, 2000, { headers: { Authorization: "Bearer T" } });
+  await u.start();
+  await until(() => f.gets === 1);
+  const h = f.getHeaders[0];
+  assert.equal(h?.["mcp-session-id"], "sess-1");
+  assert.equal(h?.["authorization"], "Bearer T");
+  assert.equal(h?.["accept"], "text/event-stream");
+  assert.equal(h?.["content-type"], undefined);
+  await u.close();
+});
+
+test("поток GET: ответ 405 не ошибка, переподключений нет, остальное работает", async () => {
+  const f = await fake("json");
+  f.getMode = "405";
+  const logs: string[] = [];
+  const u = up(f, 2000, {}, { streamRetryMs: 10, onStderr: (l: string) => logs.push(l) });
+  await u.start();
+  await until(() => f.gets === 1);
+  await new Promise((r) => setTimeout(r, 150));
+  assert.equal(f.gets, 1);
+  assert.deepEqual(logs, []);
+  assert.equal((await u.listTools())[0]?.name, "fetch");
+  await u.close();
+});
+
+test("поток GET: запрос сервера в потоке отклоняется и отвечает ему ошибкой", async () => {
+  const f = await fake("json");
+  f.getMode = "sse";
+  const refused: string[] = [];
+  const u = up(f, 2000, {}, { onRefusedRequest: (m: string) => refused.push(m) });
+  await u.start();
+  await until(() => f.streams.length === 1);
+  push(f, { jsonrpc: "2.0", id: 99, method: "sampling/createMessage", params: {} });
+  await until(() => refused.length === 1);
+  await until(() => f.seen.some((s) => s.body?.["id"] === 99));
+  assert.deepEqual(refused, ["sampling/createMessage"]);
+  await u.close();
+});
+
+test("поток GET: после обрыва переподключается и продолжает получать уведомления", async () => {
+  const f = await fake("json");
+  f.getMode = "drop";
+  let n = 0;
+  const u = up(f, 2000, {}, { streamRetryMs: 20, onToolsChanged: () => n++ });
+  await u.start();
+  await until(() => f.gets >= 2 && f.streams.length === 1);
+  push(f, changed);
+  await until(() => n === 1);
+  await u.close();
+});
+
+test("поток GET: после трёх неудачных переподключений отключается и сообщает об этом", async () => {
+  const f = await fake("json");
+  f.getMode = "500";
+  const logs: string[] = [];
+  const u = up(f, 2000, {}, { streamRetryMs: 10, onStderr: (l: string) => logs.push(l) });
+  await u.start();
+  await until(() => logs.some((l) => l.includes("отключён")));
+  await new Promise((r) => setTimeout(r, 150));
+  assert.equal(f.gets, 4, "первая попытка и три повтора");
+  assert.ok(u.alive, "основной канал при этом работает");
+  assert.equal((await u.listTools())[0]?.name, "fetch");
+  await u.close();
+});
+
+test("поток GET: закрытие клиента обрывает поток и не оставляет переподключений", async () => {
+  const f = await fake("json");
+  f.getMode = "sse";
+  const u = up(f, 2000, {}, { streamRetryMs: 10 });
+  await u.start();
+  await until(() => f.streams.length === 1);
+  const stream = f.streams[0] as ServerResponse;
+  await u.close();
+  await until(() => stream.destroyed || stream.writableEnded);
+  await new Promise((r) => setTimeout(r, 100));
+  assert.equal(f.gets, 1);
+});
+
+test("шлюз: уведомление из потока GET обновляет каталог инструментов", async () => {
+  const f = await fake("json");
+  f.getMode = "sse";
+  const gw = await gateway(f);
+  assert.ok(gw.catalog.get("web__fetch"));
+  assert.equal(gw.catalog.get("web__second"), undefined);
+  await until(() => f.streams.length === 1);
+  f.tools = [...TOOLS, { ...(TOOLS[0] as object), name: "second" }];
+  push(f, changed);
+  await until(() => gw.catalog.get("web__second") !== undefined);
+  await gw.stop();
+});
+
+test("SseParser: событие длиннее лимита обрывает разбор", () => {
+  const p = new SseParser();
+  assert.throws(() => p.feed("data: " + "x".repeat(9 * 1024 * 1024)), /длиннее лимита/);
 });
